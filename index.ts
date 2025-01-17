@@ -30,5 +30,5 @@ app.use(cors({
 });
 
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`Server running at 13.235.243.151:${port}`);
 });
