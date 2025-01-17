@@ -2,9 +2,9 @@ name: Node.js CI with OWASP Dependency Check, PM2, Docker, and Trivy
 
 on:
   push:
-    branches: [ "main"]
+    branches: [ "main" ]
   pull_request_target:
-    branches: [ "main"]
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -26,10 +26,19 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
+    # Ensure unzip is installed (required for Bun installation)
+    - name: Install unzip
+      run: |
+        if ! command -v unzip &> /dev/null; then
+          echo "Installing unzip..."
+          sudo apt-get update && sudo apt-get install -y unzip
+        fi
+
     # Ensure Bun is Installed
     - name: Ensure Bun is Installed
       run: |
         if ! command -v bun &> /dev/null; then
+          echo "Installing Bun..."
           curl -fsSL https://bun.sh/install | bash
           echo "$HOME/.bun/bin" >> $GITHUB_PATH
           echo "export PATH=$HOME/.bun/bin:\$PATH" >> $HOME/.bashrc
@@ -41,6 +50,7 @@ jobs:
     - name: Ensure PM2 is Installed
       run: |
         if ! command -v pm2 &> /dev/null; then
+          echo "Installing PM2..."
           npm install -g pm2
           echo "$(npm bin -g)" >> $GITHUB_PATH
         fi
@@ -51,25 +61,27 @@ jobs:
       run: |
         export PATH=$HOME/.bun/bin:$PATH
         bun install
+
     # Generate Package Lock File
     - name: Generate Package Lock File
       run: npm install --package-lock-only
-# Build the Source Code
+
+    # Build the Source Code
     - name: Build the Source Code
       run: |
         export PATH=$HOME/.bun/bin:$PATH
         bun build index.ts --if-present
-# Restart Application with PM2
+
+    # Restart Application with PM2
     - name: Restart Application with PM2
       run: |
+        export PATH=$HOME/.bun/bin:$PATH
+        echo "Restarting application with PM2..."
         # Start or restart kwickbill-prod
         pm2 start index.ts --name kwickbill-prod --interpreter bun --env PORT=3001 --update-env || pm2 restart kwickbill-prod --update-env
-
-        # Restart kwickbill-prod
-        pm2 restart kwickbill-dev --update-env
-
+        # Restart kwickbill-dev
+        pm2 restart kwickbill-dev --update-env || echo "kwickbill-dev process not found. Skipping restart."
         # Save the PM2 process list
         pm2 save
-
         # List all PM2 processes
         pm2 list
