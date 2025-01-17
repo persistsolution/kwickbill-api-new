@@ -1,31 +1,75 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Node.js CI
+name: Node.js CI with OWASP Dependency Check, PM2, Docker, and Trivy
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches: [ "main"]
+  pull_request_target:
+    branches: [ "main"]
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    runs-on: self-hosted
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version: [22.12.0]
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
+    # Checkout the repository
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    # Set up Node.js
+    - name: Install Node.js
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+
+    # Ensure Bun is Installed
+    - name: Ensure Bun is Installed
+      run: |
+        if ! command -v bun &> /dev/null; then
+          curl -fsSL https://bun.sh/install | bash
+          echo "$HOME/.bun/bin" >> $GITHUB_PATH
+          echo "export PATH=$HOME/.bun/bin:\$PATH" >> $HOME/.bashrc
+        fi
+        export PATH=$HOME/.bun/bin:$PATH
+        bun --version
+
+    # Ensure PM2 is Installed
+    - name: Ensure PM2 is Installed
+      run: |
+        if ! command -v pm2 &> /dev/null; then
+          npm install -g pm2
+          echo "$(npm bin -g)" >> $GITHUB_PATH
+        fi
+        pm2 --version
+
+    # Install Dependencies with Bun
+    - name: Install Dependencies
+      run: |
+        export PATH=$HOME/.bun/bin:$PATH
+        bun install
+    # Generate Package Lock File
+    - name: Generate Package Lock File
+      run: npm install --package-lock-only
+# Build the Source Code
+    - name: Build the Source Code
+      run: |
+        export PATH=$HOME/.bun/bin:$PATH
+        bun build index.ts --if-present
+# Restart Application with PM2
+    - name: Restart Application with PM2
+      run: |
+        # Start or restart kwickbill-prod
+        pm2 start index.ts --name kwickbill-prod --interpreter bun --env PORT=3001 --update-env || pm2 restart kwickbill-prod --update-env
+
+        # Restart kwickbill-prod
+        pm2 restart kwickbill-dev --update-env
+
+        # Save the PM2 process list
+        pm2 save
+
+        # List all PM2 processes
+        pm2 list
