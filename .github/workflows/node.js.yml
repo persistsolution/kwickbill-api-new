@@ -2,13 +2,13 @@ name: Node.js CI with OWASP Dependency Check, PM2, Docker, and Trivy
 
 on:
   push:
-    branches: [ "dev" ]
+    branches: [ "test" ]
   pull_request_target:
-    branches: [ "dev" ]
+    branches: [ "test" ]
 
 jobs:
   build:
-    if: github.ref == 'refs/heads/dev'
+    if: github.ref == 'refs/heads/test'
     runs-on: self-hosted
 
     strategy:
@@ -77,10 +77,10 @@ jobs:
       run: |
         export PATH=$HOME/.bun/bin:$PATH
         echo "Restarting application with PM2..."
-        # Start or restart kwickbill-dev
-        pm2 start index.ts --name kwickbill-dev --interpreter bun --env PORT=3001 --update-env || pm2 restart kwickbill-dev --update-env
-        # Restart kwickbill-dev
-        pm2 restart kwickbill-dev --update-env || echo "kwickbill-dev process not found. Skipping restart."
+        # Start or restart kwickbill-test
+        pm2 start index.ts --name kwickbill-test --interpreter bun --env PORT=3002 --update-env || pm2 restart kwickbill-test --update-env
+        # Restart kwickbill-test
+        pm2 restart kwickbill-test --update-env || echo "kwickbill-test process not found. Skipping restart."
         # Save the PM2 process list
         pm2 save
         # List all PM2 processes
