@@ -5,13 +5,13 @@ services:
     build:
       context: . # Build the Docker image from the current directory
       dockerfile: Dockerfile # Use the specified Dockerfile
-    container_name: kwickbill-api-development # Specify a custom container name
+    container_name: kwickbill-api-testing # Specify a custom container name
     volumes:
       - .:/app # Mount the current directory to /app in the container
     ports:
-      - "3001:3001" # Map port 3001 of the container to port 3001 on the host
+      - "3002:3002" # Map port 3002 of the container to port 3001 on the host
     environment:
       - HOST=0.0.0.0
-      - PORT=3001
+      - PORT=3002
     command: ["bun", "start"] # Command to start the application
     working_dir: /app # Ensure the working directory is set to /app
