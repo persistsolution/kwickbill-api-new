@@ -9,7 +9,7 @@ import employeeRoute from './src/routers/billsoftadmin/employee/employee-route';
 import productRoute from './src/routers/billsoftadmin/selling-product/product-route';
 import franchiseRoute from './src/routers/billsoftadmin/franchise/franchise-route';
 const app = express();
-const port = process.env.PORT || 3002;
+const port = process.env.PORT || 3003;
 const HOST = process.env.HOST || '0.0.0.0';
 
 
@@ -27,7 +27,7 @@ app.use(cors({
  }));
 
  app.get("/", (req, res) => {
-  res.send("Welcome to Kwickbill Testing New");
+  res.send("Welcome to Kwickbill Staging");
 });
 
 app.listen(port,'0.0.0.0', () => {
