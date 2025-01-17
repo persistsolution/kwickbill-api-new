@@ -9,9 +9,9 @@ services:
     volumes:
       - .:/app # Mount the current directory to /app in the container
     ports:
-      - "3002:3002" # Map port 3002 of the container to port 3001 on the host
+      - "3003:3003" # Map port 3003 of the container to port 3001 on the host
     environment:
       - HOST=0.0.0.0
-      - PORT=3002
+      - PORT=3003
     command: ["bun", "start"] # Command to start the application
     working_dir: /app # Ensure the working directory is set to /app
